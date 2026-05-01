@@ -183,8 +183,8 @@ export default function App() {
           </div>
 
           {/* CodeMirror */}
-          <div style={{ flex: 1, overflow: 'hidden', background: '#1e1e1e' }}>
-            <Editor codigo={codigo} onChange={setCodigo} />
+          <div style={{ flex: 1, overflow: 'hidden', background: temaOscuro ? '#1e1e1e' : '#ffffff' }}>
+            <Editor codigo={codigo} onChange={setCodigo} temaOscuro={temaOscuro} />
           </div>
 
           {/* Barra de acciones */}

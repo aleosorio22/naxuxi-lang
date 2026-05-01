@@ -10,10 +10,18 @@
   line-height: 1.6;
 }
 
-/* ── Resaltado de sintaxis Naxuxi (paleta VS Code Dark+) ── */
+/* ── Resaltado de sintaxis — Tema oscuro (VS Code Dark+) ── */
 .cm-nax-keyword  { color: #569cd6 !important; }
 .cm-nax-string   { color: #ce9178 !important; }
 .cm-nax-number   { color: #b5cea8 !important; }
 .cm-nax-comment  { color: #6a9955 !important; font-style: italic; }
 .cm-nax-operator { color: #d4d4d4 !important; }
 .cm-nax-delimiter{ color: #c586c0 !important; }
+
+/* ── Resaltado de sintaxis — Tema claro (VS Code Light+) ── */
+#app-root.light .cm-nax-keyword  { color: #0000ff !important; }
+#app-root.light .cm-nax-string   { color: #a31515 !important; }
+#app-root.light .cm-nax-number   { color: #098658 !important; }
+#app-root.light .cm-nax-comment  { color: #008000 !important; font-style: italic; }
+#app-root.light .cm-nax-operator { color: #444444 !important; }
+#app-root.light .cm-nax-delimiter{ color: #7b3814 !important; }
