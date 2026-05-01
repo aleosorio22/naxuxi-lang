@@ -6,11 +6,8 @@ import ErrorTable    from './components/ErrorTable'
 import DerivationTree from './components/DerivationTree'
 import './App.css'
 
-// Importar el compilador (módulos CJS — Vite hace la transformación automáticamente)
-import lexerMod  from '../compiler/lexer.js'
-import parserMod from '../compiler/parser.js'
-const { analizar } = lexerMod
-const { parsear }  = parserMod
+import { analizar } from '../compiler/lexer.js'
+import { parsear }  from '../compiler/parser.js'
 
 // ── Código inicial de ejemplo ──────────────────────────────────────────────
 const CODIGO_INICIAL = `#*

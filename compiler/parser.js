@@ -1,5 +1,3 @@
-'use strict';
-
 const ERRORES_SINTACTICOS = {
   'ERR-S01': 'Falta de punto y coma',
   'ERR-S02': 'Paréntesis sin cerrar',
@@ -448,4 +446,4 @@ function parsear(tokens) {
   };
 }
 
-module.exports = { parsear, ERRORES_SINTACTICOS };
+export { parsear, ERRORES_SINTACTICOS };

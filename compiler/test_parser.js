@@ -1,6 +1,5 @@
-'use strict';
-const { analizar } = require('./lexer');
-const { parsear }  = require('./parser');
+import { analizar } from './lexer.js';
+import { parsear }  from './parser.js';
 
 function imprimirArbol(nodo, prefijo = '', esUltimo = true) {
   if (!nodo) return;

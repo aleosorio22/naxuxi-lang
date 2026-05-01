@@ -1,5 +1,3 @@
-'use strict';
-
 const PALABRAS_RESERVADAS = [
   'milpa', 'naxuxi', 'pula', 'nuka', 'ixka', 'uray',
   'kunu', 'suma', 'huxiuy', 'tahma', 'kiwi', 'woona',
@@ -274,4 +272,4 @@ function analizar(codigoFuente) {
   return { tokens, simbolos, errores };
 }
 
-module.exports = { analizar, TOKEN_TYPES, PALABRAS_RESERVADAS };
+export { analizar, TOKEN_TYPES, PALABRAS_RESERVADAS };

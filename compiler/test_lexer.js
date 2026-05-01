@@ -1,5 +1,4 @@
-'use strict';
-const { analizar } = require('./lexer');
+import { analizar } from './lexer.js';
 
 const CASOS = [
   {

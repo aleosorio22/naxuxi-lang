@@ -1,14 +1,9 @@
 #!/usr/bin/env node
 
-// cli.js vive en la raíz (type: "module"), pero el compilador usa CJS.
-// createRequire permite importar módulos CJS desde un contexto ESM.
-import { createRequire } from 'module';
 import { readFileSync, existsSync } from 'fs';
 import { resolve, basename, extname } from 'path';
-
-const require = createRequire(import.meta.url);
-const { analizar }                     = require('./compiler/lexer');
-const { parsear }                      = require('./compiler/parser');
+import { analizar } from './compiler/lexer.js';
+import { parsear }  from './compiler/parser.js';
 
 // ── Colores ANSI ──────────────────────────────────────────────────────────
 const C = {
