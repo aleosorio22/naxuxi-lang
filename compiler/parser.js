@@ -74,17 +74,26 @@ function parsear(tokens) {
   // ────────────────────────────────────────────────────────────────────────
 
   function parsePrograma() {
+    const hijos = [];
+
+    // Funciones globales opcionales antes del bloque milpa
+    // Ej.: pula calcularArea(...) { ... }   milpa { ... }
+    while (!fin() && esLexema('pula')) {
+      hijos.push(parseDefinicionFuncion());
+    }
+
     if (!esLexema('milpa')) {
       const tok = actual();
       registrarError('ERR-S05',
         tok ? tok.linea   : 1,
         tok ? tok.columna : 1,
-        `El programa debe iniciar con 'milpa', se encontró ${tok ? `'${tok.lexema}'` : 'fin de archivo'}`
+        `El programa debe contener el bloque 'milpa', se encontró ${tok ? `'${tok.lexema}'` : 'fin de archivo'}`
       );
-      return nt('<programa>', []);
+      return nt('<programa>', hijos);
     }
-    const nMilpa = term('milpa'); pos++;
-    return nt('<programa>', [nMilpa, parseBloque()]);
+    hijos.push(term('milpa')); pos++;
+    hijos.push(parseBloque());
+    return nt('<programa>', hijos);
   }
 
   function parseBloque() {

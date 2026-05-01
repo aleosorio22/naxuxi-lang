@@ -1,0 +1,8 @@
+milpa {
+    naxuxi @precio = 25;
+    naxuxi nombre = "Maria;
+    naxuxi edad = 30
+    kunu (edad >= 18 {
+        uray("Mayor");
+    }
+}

@@ -1,0 +1,22 @@
+#*
+    Programa: Calculadora de milpa
+    Lenguaje: Naxuxi
+*#
+
+pula calcularArea(largo, ancho) {
+    nuka largo * ancho;
+}
+
+milpa {
+    naxuxi largo = ixka("Ingresa el largo: ");
+    naxuxi ancho  = ixka("Ingresa el ancho: ");
+    naxuxi area   = calcularArea(largo, ancho);
+
+    uray("El area es: " + area);
+
+    kunu (area >= 500) {
+        uray("Milpa apta para siembra.");
+    } suma {
+        uray("Milpa pequeña.");
+    }
+}
