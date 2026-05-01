@@ -22,6 +22,8 @@ function inferirTipo(lexema) {
   if (/^[0-9]+\.[0-9]+$/.test(lexema))   return 'decimal';
   if (lexema.startsWith('"') && lexema.endsWith('"')) return 'cadena';
   if (lexema === 'hixi' || lexema === 'kahl') return 'booleano';
+  if (lexema === 'ixka')                  return 'entrada';
+  if (/^[a-zA-Z_]/.test(lexema))         return 'referencia';
   return 'desconocido';
 }
 

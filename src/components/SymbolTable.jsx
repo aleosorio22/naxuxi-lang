@@ -1,9 +1,11 @@
 const TIPO_COLORS = {
-  entero:      { bg: '#7c2d12', text: '#fed7aa' },
-  decimal:     { bg: '#713f12', text: '#fef08a' },
-  cadena:      { bg: '#064e3b', text: '#6ee7b7' },
-  booleano:    { bg: '#4c1d95', text: '#ddd6fe' },
-  desconocido: { bg: '#27272a', text: '#a1a1aa' },
+  entero:      { bg: '#1e3322', text: '#b5cea8' },
+  decimal:     { bg: '#1e3322', text: '#b5cea8' },
+  cadena:      { bg: '#3b2318', text: '#ce9178' },
+  booleano:    { bg: '#2d2466', text: '#9cdcfe' },
+  entrada:     { bg: '#1a2d3b', text: '#4ec9b0' },
+  referencia:  { bg: '#2d2d2d', text: '#858585' },
+  desconocido: { bg: '#2d2d2d', text: '#858585' },
 }
 
 export default function SymbolTable({ simbolos }) {

@@ -52,7 +52,7 @@ export default function App() {
     const { valido, arbol, errores: erroresSin }    = parsear(tokens)
     setResultado({ tokens, simbolos, erroresLex, valido, arbol, erroresSin })
     if (erroresLex.length > 0 || erroresSin.length > 0) setTabActiva('errores')
-    else if (valido) setTabActiva('arbol')
+    else setTabActiva('tokens')
   }, [codigo])
 
   const cargarArchivo = () => fileInputRef.current?.click()
