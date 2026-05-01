@@ -471,7 +471,40 @@ El lexer implementa un **escaneo lineal de un solo paso** (`pos` avanza de 0 a `
 
 ### Máquina de estados para la tabla de símbolos
 
-La tabla de símbolos se construye **durante el análisis léxico** siguiendo una máquina de estados de cuatro fases:
+El lexer procesa tokens uno por uno, de izquierda a derecha, sin leer hacia adelante. Para poder registrar una variable en la tabla de símbolos necesita reconocer el patrón completo:
+
+```
+naxuxi  edad  =  25  ;
+```
+
+Como no puede "leer la frase completa" de una sola vez, usa una variable `estado` que recuerda en qué parte del patrón se encuentra en cada momento:
+
+```
+Estado 0  →  ve 'naxuxi'  →  Estado 1   ("acabo de ver naxuxi")
+Estado 1  →  ve 'edad'    →  Estado 2   ("acabo de ver el nombre de la variable")
+Estado 2  →  ve '='       →  Estado 3   ("ya sé el nombre, ahora viene el valor")
+Estado 3  →  ve '25'      →  agrega a tabla de símbolos, vuelve a Estado 0
+```
+
+Esto se traduce directamente al código dentro de la función `emitirToken`:
+
+```javascript
+if (tipo === TOKEN_TYPES.RESERVADA && lexema === 'naxuxi') {
+    estado = 1;
+} else if (estado === 1 && tipo === TOKEN_TYPES.IDENTIFICADOR) {
+    varNombre = lexema;   // guarda el nombre de la variable
+    estado = 2;
+} else if (estado === 2 && tipo === TOKEN_TYPES.OP_ASIGNACION && lexema === '=') {
+    estado = 3;
+} else if (estado === 3) {
+    simbolos.push({ identificador: varNombre, tipo: inferirTipo(lexema), valor: lexema, ... });
+    estado = 0;
+}
+```
+
+El nombre formal de esta técnica es **autómata finito determinista (AFD)** o **máquina de estados finitos**: un sistema con un conjunto de estados posibles y reglas de transición que determinan cómo pasar de un estado al siguiente según el símbolo de entrada. Es el mismo concepto que se usa en teoría de autómatas, aplicado aquí para rastrear contexto durante el escaneo.
+
+La tabla de transiciones completa es:
 
 | Estado | Condición de transición | Acción |
 |---|---|---|
@@ -479,9 +512,9 @@ La tabla de símbolos se construye **durante el análisis léxico** siguiendo un
 | `1` — tras `naxuxi` | Al emitir `IDENTIFICADOR` | Guarda nombre/línea/col → Estado 2 |
 | `1` — tras `naxuxi` | Al ver una `RESERVADA` | Registra `ERR-L06` → Estado 0 |
 | `2` — tras `naxuxi <id>` | Al emitir `OP_ASIGNACION '='` | → Estado 3 |
-| `3` — tras `naxuxi <id> =` | Al emitir cualquier token de valor | Agrega entrada a la tabla de símbolos → Estado 0 |
+| `3` — tras `naxuxi <id> =` | Al emitir cualquier token de valor | Agrega a tabla de símbolos → Estado 0 |
 
-Cualquier error léxico (`registrarError`) reinicia el estado a `0` para evitar registros parciales en la tabla de símbolos.
+Cualquier error léxico reinicia el estado a `0` para evitar registros parciales en la tabla de símbolos.
 
 ### Detección de `ERR-L04` (número malformado)
 
