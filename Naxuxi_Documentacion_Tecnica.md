@@ -12,8 +12,8 @@
 1. Fase 1 — Definición del Lenguaje
 2. Fase 2 — Herramientas Utilizadas
 3. Fase 3 — Análisis Léxico ✓
-4. Fase 4 — Análisis Sintáctico *(próximamente)*
-5. Fase 5 — Pruebas *(próximamente)*
+4. Fase 4 — Análisis Sintáctico ✓
+5. Fase 5 — Interfaz Web ✓
 6. Conclusiones *(próximamente)*
 
 ---
@@ -395,10 +395,10 @@ El compilador de Naxuxi está implementado en **JavaScript puro (ES6+)**, sin li
 
 | Herramienta | Versión | Rol en el proyecto |
 |---|---|---|
-| **Node.js** | 18+ | Runtime para ejecución CLI y servidor de desarrollo |
-| **React** | 18 | Biblioteca para construir la interfaz web del compilador |
+| **Node.js** | 20+ | Runtime para ejecución CLI y servidor de desarrollo |
+| **React** | 19 | Biblioteca para construir la interfaz web del compilador |
 | **Vite** | 5 | Bundler y servidor de desarrollo para el frontend |
-| **Tailwind CSS** | 3 | Framework de estilos utilitarios para la interfaz |
+| **Tailwind CSS** | 4 | Framework de estilos utilitarios con variables CSS nativas |
 | **CodeMirror** | 6 | Editor de código con resaltado de sintaxis personalizado para Naxuxi |
 
 ### 7.3 Herramientas de desarrollo
@@ -860,6 +860,135 @@ Ningún patrón coincide → Registrar ERR-L01 → avanzar un carácter → cont
 # Fase 4 — Análisis Sintáctico
 
 El análisis sintáctico es la segunda etapa del compilador. Recibe la lista de tokens producida por el lexer y verifica que estén organizados correctamente según las reglas gramaticales del lenguaje. El parser de Naxuxi implementa un **analizador de descenso recursivo**, donde cada no terminal del BNF corresponde a una función del código.
+
+---
+
+## 14.5 Decisiones de implementación — `compiler/parser.js`
+
+### Técnica: Descenso Recursivo
+
+El parser implementa un **analizador de descenso recursivo predictivo** (*recursive descent parser*). Cada regla BNF del lenguaje corresponde a una función de JavaScript con el mismo nombre. Para elegir qué regla aplicar, el parser examina el token actual (`tokens[pos]`) sin consumirlo — esta es la técnica de *lookahead de 1 token*.
+
+```javascript
+function parseSentencia() {
+  if (esLexema('naxuxi'))   return parseDeclaracion()
+  if (esLexema('kunu'))     return parseCondicional()
+  if (esLexema('huxiuy'))   return parseCicloWhile()
+  if (esLexema('tahma'))    return parseCicloFor()
+  if (esLexema('pula'))     return parseDefinicionFuncion()
+  if (esLexema('nuka'))     return parseRetorno()
+  if (esLexema('uray'))     return parseSalida()
+  if (esTipo('IDENTIFICADOR')) return parseAsignacion()
+  // ... recuperación de error
+}
+```
+
+### Extensión del BNF: funciones antes de `milpa`
+
+El BNF original define `<programa> ::= "milpa" <bloque>`. Sin embargo, el lenguaje Naxuxi permite (y el ejemplo canónico usa) definir funciones con `pula` **antes** del bloque `milpa`. El parser extiende esta regla implícitamente:
+
+```
+<programa_real> ::= { <definicion_funcion> } "milpa" <bloque>
+```
+
+Esto se implementa con un ciclo antes de consumir `milpa`:
+
+```javascript
+function parsePrograma() {
+  const hijos = []
+  // Recolectar definiciones de funciones globales antes de milpa
+  while (!fin() && esLexema('pula')) {
+    hijos.push(parseDefinicionFuncion())
+  }
+  // Ahora exigir milpa
+  hijos.push(consumir('milpa', 'ERR-S05'))
+  hijos.push(parseBloque())
+  return nodoNT('<programa>', hijos)
+}
+```
+
+### Construcción del árbol de derivación
+
+Cada función del parser retorna un **nodo** del árbol de derivación. Hay dos tipos de nodos:
+
+```javascript
+// Nodo no terminal (regla BNF)
+function nodoNT(nombre, hijos) {
+  return { tipo: 'no-terminal', nombre, hijos }
+}
+
+// Nodo terminal (token consumido)
+function nodoT(lexema) {
+  return { tipo: 'terminal', nombre: `"${lexema}"`, hijos: [] }
+}
+```
+
+El árbol se construye de manera natural con la recursividad: cada llamada a una función de parse retorna un nodo, y ese nodo se agrega como hijo del nodo padre. El árbol completo queda disponible en `resultado.arbol` y es directamente consumido por el componente `DerivationTree.jsx`.
+
+### Eliminación de recursión por la izquierda en expresiones
+
+El BNF de expresiones usa recursión por la izquierda:
+```
+<expresion_aritmetica> ::= <expresion_aritmetica> "+" <termino>
+```
+
+Un parser de descenso recursivo no puede implementar esto directamente — causaría recursión infinita. La solución clásica es transformarla en iteración:
+
+```javascript
+function parseExpArit() {
+  let nodo = parseTermino()               // primer factor
+  while (esAritBinario()) {               // mientras haya + o -
+    const op   = nodoT(actual().lexema)
+    avanzar()
+    const der  = parseTermino()
+    nodo = nodoNT('<expresion_aritmetica>', [nodo, op, der])
+  }
+  return nodo
+}
+```
+
+Este patrón `izquierda = izquierda OP derecha` se aplica en los tres niveles de precedencia: lógico (`kiwi`, `woona`), comparación (`==`, `!=`, `>`, etc.) y aritmético (`+`, `-`, `*`, `/`, `%`).
+
+### Recuperación de errores (modo pánico)
+
+Cuando el parser encuentra un error, no se detiene. Registra el error y llama a `sincronizar()`, que avanza los tokens hasta encontrar un punto de recuperación seguro (generalmente `;` o `}`):
+
+```javascript
+function sincronizar(...sincTokens) {
+  while (!fin()) {
+    if (sincTokens.includes(actual().lexema)) return
+    avanzar()
+  }
+}
+```
+
+En `parseListaSentencias` se añade una salvaguarda adicional contra bucles infinitos: si después de intentar parsear una sentencia la posición no avanzó, se fuerza un `sincronizar` y un avance explícito:
+
+```javascript
+function parseListaSentencias() {
+  const stmts = []
+  while (!fin() && !esLexema('}')) {
+    const posAntes = pos
+    stmts.push(parseSentencia())
+    if (pos === posAntes) {          // no avanzó → forzar avance
+      sincronizar(';', '}')
+      if (!fin() && esLexema(';')) avanzar()
+    }
+  }
+  return stmts
+}
+```
+
+### Interfaz pública
+
+```javascript
+const { parsear, ERRORES_SINTACTICOS } = require('./compiler/parser');
+
+const resultado = parsear(tokens);
+// resultado.valido   → boolean (true si errores.length === 0)
+// resultado.arbol    → nodo raíz del árbol de derivación
+// resultado.errores  → Array de errores sintácticos
+```
 
 ---
 
@@ -1396,6 +1525,140 @@ Llamar a parse_lista_sentencias()
   ▼
 Retornar árbol sintáctico + tabla de errores
 ```
+
+---
+
+---
+
+# Fase 5 — Interfaz Web
+
+La interfaz web integra el compilador de Naxuxi en una aplicación React con diseño profesional de dos paneles.
+
+---
+
+## 19. Arquitectura de la interfaz
+
+### 19.1 Diseño de dos paneles
+
+```
+┌──────────────────────────┬──────────────────────────────┐
+│  Panel izquierdo (48%)   │   Panel derecho (52%)        │
+│                          │                              │
+│  [ Editor .nax ]         │  [ Tokens | Símbolos |       │
+│    CodeMirror 6          │    Árbol  | Errores  ]       │
+│    resaltado Naxuxi      │                              │
+│                          │  Contenido del tab activo    │
+│  ────────────────────    │                              │
+│  [📂 Cargar] [▶ Compilar]│                              │
+│  ✓ Compilación exitosa   │                              │
+└──────────────────────────┴──────────────────────────────┘
+```
+
+### 19.2 Flujo de interacción
+
+1. El usuario escribe código Naxuxi en el editor **o** carga un archivo `.nax`
+2. Presiona **▶ Compilar** — se ejecutan `analizar()` y `parsear()` en el hilo principal
+3. La app actualiza el estado React con `{ tokens, simbolos, erroresLex, valido, arbol, erroresSin }`
+4. Si hay errores → cambia automáticamente al tab **Errores**
+5. Si el programa es válido → cambia automáticamente al tab **Árbol**
+6. El indicador de estado muestra ✓ o ✗ con el conteo de errores
+
+---
+
+## 20. Componentes React
+
+### 20.1 Editor.jsx — CodeMirror 6
+
+El editor usa la API de bajo nivel de CodeMirror 6 (sin wrapper de terceros). Utiliza `ViewPlugin` + `MatchDecorator` para resaltar las 18 palabras reservadas de Naxuxi con color púrpura (`#c678dd`):
+
+```javascript
+const kwMatcher = new MatchDecorator({
+  regexp: new RegExp(`\\b(milpa|naxuxi|pula|nuka|ixka|uray|...)\\b`, 'g'),
+  decoration: () => Decoration.mark({ class: 'cm-naxuxi-kw' }),
+})
+```
+
+La sincronización con el estado de React se maneja en dos efectos separados:
+- `useEffect([], [])` — monta el editor una sola vez
+- `useEffect([codigo])` — detecta cambios externos (carga de archivo) y despacha un `view.dispatch`
+
+### 20.2 TokenTable.jsx
+
+Tabla con columnas `#`, `Lexema`, `Categoría`, `Línea`, `Columna`. Cada categoría se muestra con una clase badge coloreada (`.badge-RESERVADA`, `.badge-IDENTIFICADOR`, etc.) definida en `index.css`.
+
+### 20.3 SymbolTable.jsx
+
+Tabla con columnas `Identificador`, `Tipo`, `Valor`, `Línea`, `Columna`. Cada tipo de dato tiene un fondo de color distinto usando el mapa `TIPO_COLORS`:
+
+| Tipo | Fondo | Texto |
+|---|---|---|
+| entero | marrón oscuro | melocotón |
+| decimal | ámbar oscuro | amarillo |
+| cadena | verde oscuro | esmeralda |
+| booleano | índigo oscuro | lavanda |
+
+### 20.4 ErrorTable.jsx
+
+Muestra dos secciones separadas: errores léxicos (naranja) y errores sintácticos (rojo). Si no hay errores, muestra un estado de éxito con ✅.
+
+### 20.5 DerivationTree.jsx — SVG puro
+
+El árbol de derivación se renderiza con SVG puro, sin librerías externas. El algoritmo de layout trabaja en dos pasos:
+
+**Paso 1 — Asignación de columnas (DFS):**
+- Los nodos hoja reciben columnas consecutivas de izquierda a derecha
+- Los nodos internos se centran sobre el rango de columnas de sus hijos
+
+```javascript
+function visitar(nodo, profundidad, padreId) {
+  // Si es hoja: ocupa la siguiente columna libre
+  if (hijos.length === 0) {
+    entrada.x = cursor.col * (NODE_W + H_GAP)
+    cursor.col++
+  } else {
+    const colInicio = cursor.col
+    hijos.forEach(h => visitar(h, profundidad + 1, id))
+    const colFin = cursor.col - 1
+    entrada.x = ((colInicio + colFin) / 2) * (NODE_W + H_GAP)
+  }
+}
+```
+
+**Paso 2 — Renderizado SVG:**
+- Aristas: curvas cúbicas de Bézier (`C`) para conexiones visualmente suaves
+- Nodos no terminales: fondo azul oscuro (`#0f172a`), borde azul (`#1d4ed8`), texto azul claro (`#93c5fd`)
+- Nodos terminales (hojas): fondo ámbar oscuro (`#1c1407`), borde ámbar (`#92400e`), texto ámbar (`#fbbf24`)
+- Texto truncado a 17 caracteres para mantener proporciones
+
+---
+
+## 21. Sistema de estilos
+
+### 21.1 Variables CSS (tema oscuro / claro)
+
+El tema completo se controla con variables CSS en `:root`. El modo claro se activa añadiendo la clase `.light` al `#app-root`:
+
+```css
+:root {
+  --bg:          #0f0f17;   /* fondo principal */
+  --bg-panel:    #14141f;   /* panel derecho */
+  --bg-surface:  #1a1b2e;   /* headers y barras */
+  --accent:      #cba6f7;   /* color de acento (violeta) */
+  --success:     #a6e3a1;   /* verde de compilación exitosa */
+  --error:       #f38ba8;   /* rojo de errores */
+  --warning:     #fab387;   /* naranja de errores léxicos */
+}
+```
+
+### 21.2 Tailwind CSS v4
+
+El proyecto usa Tailwind CSS v4, cuya configuración se hace directamente en CSS:
+
+```css
+@import "tailwindcss";   /* reemplaza el antiguo @tailwind base/components/utilities */
+```
+
+No se requiere `tailwind.config.js`. El plugin `@tailwindcss/vite` se encarga de la integración con Vite.
 
 ---
 
