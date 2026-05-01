@@ -1,36 +1,37 @@
 @import "tailwindcss";
 
-/* ── Variables de tema ─────────────────────────────────────────── */
+/* ── Variables de tema — Dark (VS Code Dark+) ─────────────────── */
 :root {
-  --bg:          #0f0f17;
-  --bg-panel:    #14141f;
-  --bg-surface:  #1a1b2e;
-  --bg-hover:    #23243a;
-  --border:      #2e3050;
-  --text:        #cdd6f4;
-  --text-muted:  #6c7086;
-  --text-head:   #f4f4f5;
+  --bg:          #1e1e1e;
+  --bg-panel:    #252526;
+  --bg-surface:  #2d2d30;
+  --bg-hover:    #3e3e42;
+  --border:      #3c3c3c;
+  --text:        #d4d4d4;
+  --text-muted:  #858585;
+  --text-head:   #e8e8e8;
   --accent:      #cba6f7;
-  --success:     #a6e3a1;
-  --warning:     #fab387;
-  --error:       #f38ba8;
+  --success:     #4ec9b0;
+  --warning:     #ce9178;
+  --error:       #f48771;
 
   color-scheme: dark;
 }
 
-:root.light {
-  --bg:          #f4f4f5;
-  --bg-panel:    #ffffff;
-  --bg-surface:  #e4e4e7;
-  --bg-hover:    #d4d4d8;
-  --border:      #a1a1aa;
-  --text:        #18181b;
-  --text-muted:  #71717a;
-  --text-head:   #09090b;
-  --accent:      #7c3aed;
-  --success:     #16a34a;
-  --warning:     #d97706;
-  --error:       #dc2626;
+/* ── Tema claro ────────────────────────────────────────────────── */
+#app-root.light {
+  --bg:          #fffffe;
+  --bg-panel:    #f3f3f3;
+  --bg-surface:  #ececec;
+  --bg-hover:    #e0e0e0;
+  --border:      #c8c8c8;
+  --text:        #333333;
+  --text-muted:  #717171;
+  --text-head:   #1a1a1a;
+  --accent:      #6c33a8;
+  --success:     #0e7a6c;
+  --warning:     #8c4b00;
+  --error:       #c81922;
 
   color-scheme: light;
 }
@@ -40,9 +41,9 @@
 
 body {
   margin: 0;
-  background: var(--bg);
+  background: #1e1e1e;
   color: var(--text);
-  font-family: system-ui, 'Segoe UI', Roboto, sans-serif;
+  font-family: 'Segoe UI', system-ui, Roboto, sans-serif;
   font-size: 14px;
   line-height: 1.5;
 }
@@ -55,11 +56,11 @@ body {
   overflow: hidden;
 }
 
-/* ── Scrollbar discreta ────────────────────────────────────────── */
-::-webkit-scrollbar       { width: 6px; height: 6px; }
+/* ── Scrollbar ─────────────────────────────────────────────────── */
+::-webkit-scrollbar       { width: 8px; height: 8px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+::-webkit-scrollbar-thumb { background: #555; border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: #777; }
 
 /* ── Tabla genérica ────────────────────────────────────────────── */
 .nax-table {
@@ -71,8 +72,8 @@ body {
   background: var(--bg-surface);
   color: var(--text-muted);
   text-transform: uppercase;
-  font-size: 11px;
-  letter-spacing: .05em;
+  font-size: 10.5px;
+  letter-spacing: .06em;
   font-weight: 600;
   padding: 8px 12px;
   text-align: left;
@@ -82,7 +83,7 @@ body {
   z-index: 1;
 }
 .nax-table td {
-  padding: 6px 12px;
+  padding: 5px 12px;
   border-bottom: 1px solid var(--border);
   font-family: 'JetBrains Mono', Consolas, monospace;
   color: var(--text);
@@ -94,16 +95,17 @@ body {
 .badge {
   display: inline-block;
   padding: 1px 7px;
-  border-radius: 10px;
+  border-radius: 3px;
   font-size: 11px;
   font-weight: 600;
+  font-family: 'JetBrains Mono', Consolas, monospace;
 }
-.badge-RESERVADA      { background: #4c1d95; color: #ddd6fe; }
-.badge-IDENTIFICADOR  { background: #14532d; color: #bbf7d0; }
-.badge-ENTERO         { background: #7c2d12; color: #fed7aa; }
-.badge-DECIMAL        { background: #7c2d12; color: #fde68a; }
-.badge-CADENA         { background: #064e3b; color: #6ee7b7; }
-.badge-OP_ARITMETICO  { background: #1e3a5f; color: #93c5fd; }
-.badge-OP_COMPARACION { background: #1e3a5f; color: #7dd3fc; }
-.badge-OP_ASIGNACION  { background: #1e3a5f; color: #bae6fd; }
-.badge-DELIMITADOR    { background: #3f3f46; color: #d4d4d8; }
+.badge-RESERVADA      { background: #2d2466; color: #9cdcfe; }
+.badge-IDENTIFICADOR  { background: #0f3320; color: #4ec9b0; }
+.badge-ENTERO         { background: #1e3322; color: #b5cea8; }
+.badge-DECIMAL        { background: #1e3322; color: #b5cea8; }
+.badge-CADENA         { background: #3b2318; color: #ce9178; }
+.badge-OP_ARITMETICO  { background: #1e1e1e; color: #d4d4d4; border: 1px solid #3c3c3c; }
+.badge-OP_COMPARACION { background: #1e1e1e; color: #d4d4d4; border: 1px solid #3c3c3c; }
+.badge-OP_ASIGNACION  { background: #1e1e1e; color: #d4d4d4; border: 1px solid #3c3c3c; }
+.badge-DELIMITADOR    { background: #2d1a2d; color: #c586c0; }

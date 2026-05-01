@@ -1,18 +1,19 @@
-/* App-level overrides — el resto lo maneja Tailwind + index.css */
-
-/* Editor CodeMirror — ocupa el 100% del contenedor */
+/* ── Editor CodeMirror — ocupa el 100% del contenedor ── */
 .editor-container,
 .editor-container .cm-editor {
   height: 100%;
 }
 .editor-container .cm-scroller {
   overflow: auto;
-  font-family: 'JetBrains Mono', 'Fira Code', Consolas, monospace;
+  font-family: 'JetBrains Mono', 'Cascadia Code', 'Fira Code', Consolas, monospace;
   font-size: 13px;
+  line-height: 1.6;
 }
 
-/* Palabra reservada de Naxuxi — resaltado personalizado */
-.cm-naxuxi-kw  { color: #c678dd; font-weight: 600; }
-.cm-naxuxi-cmt { color: #5c6370; font-style: italic; }
-.cm-naxuxi-str { color: #98c379; }
-.cm-naxuxi-num { color: #d19a66; }
+/* ── Resaltado de sintaxis Naxuxi (paleta VS Code Dark+) ── */
+.cm-nax-keyword  { color: #569cd6 !important; }
+.cm-nax-string   { color: #ce9178 !important; }
+.cm-nax-number   { color: #b5cea8 !important; }
+.cm-nax-comment  { color: #6a9955 !important; font-style: italic; }
+.cm-nax-operator { color: #d4d4d4 !important; }
+.cm-nax-delimiter{ color: #c586c0 !important; }
