@@ -11,7 +11,7 @@
 
 1. Fase 1 — Definición del Lenguaje
 2. Fase 2 — Herramientas Utilizadas
-3. Fase 3 — Análisis Léxico *(próximamente)*
+3. Fase 3 — Análisis Léxico ✓
 4. Fase 4 — Análisis Sintáctico *(próximamente)*
 5. Fase 5 — Pruebas *(próximamente)*
 6. Conclusiones *(próximamente)*
@@ -449,6 +449,58 @@ naxuxi/
 # Fase 3 — Análisis Léxico
 
 El análisis léxico es la primera etapa del compilador. Su función es leer el código fuente carácter por carácter y agruparlos en unidades significativas llamadas **tokens**. El lexer de Naxuxi reconoce 9 categorías de tokens, construye la tabla de símbolos e identifica y reporta errores léxicos. Los comentarios se reconocen y se descartan — no generan token.
+
+---
+
+## 7.5 Decisiones de implementación — `compiler/lexer.js`
+
+### Compatibilidad de módulos
+
+El proyecto Naxuxi usa `"type": "module"` en su `package.json` raíz (necesario para Vite/React). El directorio `compiler/` contiene su propio `compiler/package.json` con `"type": "commonjs"`, de modo que `lexer.js` y `parser.js` pueden usar `require` / `module.exports`. Vite transforma automáticamente estos módulos CJS a ESM en el bundle del navegador.
+
+### Algoritmo de escaneo
+
+El lexer implementa un **escaneo lineal de un solo paso** (`pos` avanza de 0 a `longitud-1`) sin retroceso (*backtracking*). En cada iteración se toma el substring restante `codigoFuente.slice(pos)` y se intenta aplicar cada patrón en orden de prioridad. El primer patrón que coincide consume los caracteres correspondientes.
+
+### Seguimiento de posición
+
+- `linea` y `columna` se actualizan carácter a carácter.
+- Tabulaciones y espacios cuentan como **1 columna** cada uno.
+- Los saltos de línea `\n` incrementan `linea` y reinician `columna = 1`.
+- Dentro de comentarios de bloque (`#* ... *#`), los saltos de línea se contabilizan correctamente mediante la función auxiliar `avanzarTexto`.
+
+### Máquina de estados para la tabla de símbolos
+
+La tabla de símbolos se construye **durante el análisis léxico** siguiendo una máquina de estados de cuatro fases:
+
+| Estado | Condición de transición | Acción |
+|---|---|---|
+| `0` — ninguno | Al emitir `RESERVADA 'naxuxi'` | → Estado 1 |
+| `1` — tras `naxuxi` | Al emitir `IDENTIFICADOR` | Guarda nombre/línea/col → Estado 2 |
+| `1` — tras `naxuxi` | Al ver una `RESERVADA` | Registra `ERR-L06` → Estado 0 |
+| `2` — tras `naxuxi <id>` | Al emitir `OP_ASIGNACION '='` | → Estado 3 |
+| `3` — tras `naxuxi <id> =` | Al emitir cualquier token de valor | Agrega entrada a la tabla de símbolos → Estado 0 |
+
+Cualquier error léxico (`registrarError`) reinicia el estado a `0` para evitar registros parciales en la tabla de símbolos.
+
+### Detección de `ERR-L04` (número malformado)
+
+El patrón `/^[0-9]+\.(?![0-9])/` (lookahead negativo) se evalúa **antes** que los patrones de decimal y entero. Captura casos como `3.` seguido de cualquier carácter que no sea dígito (espacio, punto y coma, fin de archivo, etc.).
+
+### Detección de `ERR-L05` (identificador inválido)
+
+El patrón `/^[0-9]+[a-zA-Z_][a-zA-Z0-9_]*/` se evalúa **antes** que el entero puro, para que `1edad` se reporte completo como identificador inválido en lugar de tokenizarse como `1` + `edad`.
+
+### Interfaz pública
+
+```javascript
+const { analizar, TOKEN_TYPES, PALABRAS_RESERVADAS } = require('./compiler/lexer');
+
+const resultado = analizar(codigoFuente);
+// resultado.tokens   → Array de tokens
+// resultado.simbolos → Tabla de símbolos
+// resultado.errores  → Errores léxicos
+```
 
 ---
 
