@@ -401,7 +401,8 @@ module.exports = { parsear };
 
 ### Diseño
 
-- Tema oscuro preferido
+- Tema oscuro preferido pero con opcion de cambiar tema
+- Tratar de hacerlo responsive
 - Layout de dos paneles: izquierda editor, derecha resultados con tabs
 - Los tabs del panel derecho: `Tokens` | `Símbolos` | `Árbol` | `Errores`
 - Indicador visual: ✅ "Compilación exitosa" o ❌ "X errores encontrados"
