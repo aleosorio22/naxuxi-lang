@@ -37,7 +37,9 @@ function analizar(codigoFuente) {
   let columna = 1;
 
   // Estado para construir la tabla de símbolos
-  // 0=ninguno 1=tras_naxuxi 2=tras_naxuxi_id 3=tras_naxuxi_id_eq
+  // 0=ninguno
+  // 1=tras_naxuxi  2=tras_naxuxi_id  3=tras_naxuxi_id_eq
+  // 10=tras_pula   11=tras_pula_id   12=dentro_parametros
   let estado     = 0;
   let varNombre  = '';
   let varLinea   = 0;
@@ -61,18 +63,20 @@ function analizar(codigoFuente) {
   function emitirToken(tipo, lexema, lin, col) {
     tokens.push({ tipo, lexema, linea: lin, columna: col });
 
-    // Máquina de estados para tabla de símbolos
+    // ── Máquina de estados para tabla de símbolos ────────────────────
     if (tipo === TOKEN_TYPES.RESERVADA && lexema === 'naxuxi') {
       estado = 1;
+
+    } else if (tipo === TOKEN_TYPES.RESERVADA && lexema === 'pula') {
+      estado = 10;
+
+    // ── Rama naxuxi (estados 1-3) ──────────────────────────────────
     } else if (estado === 1 && tipo === TOKEN_TYPES.IDENTIFICADOR) {
-      varNombre  = lexema;
-      varLinea   = lin;
-      varColumna = col;
+      varNombre = lexema; varLinea = lin; varColumna = col;
       estado = 2;
     } else if (estado === 2 && tipo === TOKEN_TYPES.OP_ASIGNACION && lexema === '=') {
       estado = 3;
     } else if (estado === 3) {
-      // Primer token del valor — registrar en tabla de símbolos
       simbolos.push({
         identificador: varNombre,
         tipo:          inferirTipo(lexema),
@@ -81,10 +85,37 @@ function analizar(codigoFuente) {
         columna:       varColumna
       });
       estado = 0;
+
+    // ── Rama pula (estados 10-12) ──────────────────────────────────
+    } else if (estado === 10 && tipo === TOKEN_TYPES.IDENTIFICADOR) {
+      // Nombre de la función
+      simbolos.push({
+        identificador: lexema,
+        tipo:          'funcion',
+        valor:         'pula',
+        linea:         lin,
+        columna:       col
+      });
+      estado = 11;
+    } else if (estado === 11 && lexema === '(') {
+      estado = 12;
+    } else if (estado === 12 && tipo === TOKEN_TYPES.IDENTIFICADOR) {
+      // Parámetro de la función
+      simbolos.push({
+        identificador: lexema,
+        tipo:          'parametro',
+        valor:         '—',
+        linea:         lin,
+        columna:       col
+      });
+      // permanecer en estado 12 para más parámetros
+    } else if (estado === 12 && lexema === ')') {
+      estado = 0;
+
+    // ── Reinicio por token relevante fuera de contexto ─────────────
     } else if (tipo === TOKEN_TYPES.RESERVADA || tipo === TOKEN_TYPES.IDENTIFICADOR ||
                tipo === TOKEN_TYPES.ENTERO    || tipo === TOKEN_TYPES.DECIMAL       ||
                tipo === TOKEN_TYPES.CADENA) {
-      // Cualquier token relevante fuera de contexto naxuxi reinicia el estado
       if (estado !== 2) estado = 0;
     }
   }
