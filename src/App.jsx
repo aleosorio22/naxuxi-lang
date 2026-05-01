@@ -89,27 +89,55 @@ export default function App() {
                background: 'var(--bg)', color: 'var(--text)' }}
     >
 
-      {/* ── Title bar (VS Code style) ── */}
+      {/* ── Title bar ── */}
       <div style={{
-        height: 30, flexShrink: 0,
+        height: 46, flexShrink: 0,
         background: 'var(--bg-surface)',
         borderBottom: '1px solid var(--border)',
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        padding: '0 12px', userSelect: 'none',
+        padding: '0 14px', userSelect: 'none',
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <span style={{ fontSize: 16 }}>🌽</span>
-          <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-head)', letterSpacing: '.01em' }}>
-            Naxuxi Compiler
-          </span>
+
+        {/* Izquierda: icono + título + subtítulo */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <div style={{
+            width: 32, height: 32, borderRadius: 7,
+            background: 'var(--bg-hover)', border: '1px solid var(--border)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontSize: 17, flexShrink: 0,
+          }}>🌽</div>
+          <div style={{ lineHeight: 1.25 }}>
+            <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-head)' }}>
+              Naxuxi Compiler
+            </div>
+            <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>
+              Compiladores · UMG
+            </div>
+          </div>
         </div>
+
+        {/* Centro: badges de resumen (solo tras compilar) */}
+        {resultado && (
+          <div style={{ display: 'flex', gap: 7 }}>
+            <StatBadge value={resultado.tokens.length} label="tokens"
+              r={203} g={166} b={247} />
+            <StatBadge value={totalErrores} label="errores"
+              r={totalErrores > 0 ? 244 : 78}
+              g={totalErrores > 0 ? 135 : 201}
+              b={totalErrores > 0 ? 113 : 176} />
+            <StatBadge value={resultado.simbolos.length} label="símbolos"
+              r={133} g={133} b={133} />
+          </div>
+        )}
+
+        {/* Derecha: botón de tema */}
         <button
           onClick={() => setTemaOscuro(t => !t)}
           title={temaOscuro ? 'Cambiar a tema claro' : 'Cambiar a tema oscuro'}
           style={{
             background: 'none', border: 'none', cursor: 'pointer',
             color: 'var(--text-muted)', fontSize: 14,
-            padding: '3px 6px', borderRadius: 4,
+            padding: '4px 7px', borderRadius: 4,
             display: 'flex', alignItems: 'center',
             transition: 'color .15s',
           }}
@@ -260,6 +288,26 @@ export default function App() {
         }
         .btn-secondary:hover { background: var(--bg-hover); color: var(--text); }
       `}</style>
+    </div>
+  )
+}
+
+// ── Badge de estadística para el header ───────────────────────────────────────
+function StatBadge({ value, label, r, g, b }) {
+  const color  = `rgb(${r},${g},${b})`
+  const bg     = `rgba(${r},${g},${b},.12)`
+  const border = `rgba(${r},${g},${b},.3)`
+  return (
+    <div style={{
+      display: 'flex', alignItems: 'center', gap: 5,
+      padding: '3px 11px', borderRadius: 20,
+      border: `1px solid ${border}`,
+      background: bg,
+      fontSize: 11, color,
+      userSelect: 'none',
+    }}>
+      <span style={{ fontWeight: 700, fontVariantNumeric: 'tabular-nums' }}>{value}</span>
+      <span style={{ opacity: .75 }}>{label}</span>
     </div>
   )
 }
